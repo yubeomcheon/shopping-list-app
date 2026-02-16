@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Shopping List</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #f0f2f5;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      padding: 40px 16px;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 480px;
+    }
+
+    h1 {
+      font-size: 28px;
+      color: #1a1a2e;
+      margin-bottom: 20px;
+    }
+
+    .input-row {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 24px;
+    }
+
+    .input-row input {
+      flex: 1;
+      padding: 12px 16px;
+      border: 2px solid #ddd;
+      border-radius: 10px;
+      font-size: 16px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .input-row input:focus {
+      border-color: #4a6cf7;
+    }
+
+    .input-row button {
+      padding: 12px 20px;
+      background: #4a6cf7;
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+      white-space: nowrap;
+    }
+
+    .input-row button:hover { background: #3b5de7; }
+
+    .count {
+      font-size: 14px;
+      color: #888;
+      margin-bottom: 12px;
+    }
+
+    ul { list-style: none; }
+
+    li {
+      display: flex;
+      align-items: center;
+      background: #fff;
+      padding: 14px 16px;
+      border-radius: 10px;
+      margin-bottom: 8px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+      transition: opacity 0.2s;
+    }
+
+    li.checked { opacity: 0.55; }
+
+    li input[type="checkbox"] {
+      width: 20px;
+      height: 20px;
+      margin-right: 12px;
+      cursor: pointer;
+      accent-color: #4a6cf7;
+    }
+
+    li span {
+      flex: 1;
+      font-size: 16px;
+      color: #333;
+      transition: text-decoration 0.2s;
+    }
+
+    li.checked span {
+      text-decoration: line-through;
+      color: #999;
+    }
+
+    li button {
+      background: none;
+      border: none;
+      color: #ccc;
+      font-size: 20px;
+      cursor: pointer;
+      padding: 0 4px;
+      transition: color 0.2s;
+    }
+
+    li button:hover { color: #e74c3c; }
+
+    .empty {
+      text-align: center;
+      color: #aaa;
+      margin-top: 60px;
+      font-size: 15px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Shopping List</h1>
+
+    <div class="input-row">
+      <input id="itemInput" type="text" placeholder="Add item...">
+      <button onclick="addItem()">Add</button>
+    </div>
+
+    <div class="count" id="count"></div>
+    <ul id="list"></ul>
+    <p class="empty" id="empty">No items yet.</p>
+  </div>
+
+  <script>
+    const STORAGE_KEY = 'shopping-list';
+    let items = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+
+    const listEl = document.getElementById('list');
+    const countEl = document.getElementById('count');
+    const emptyEl = document.getElementById('empty');
+    const input = document.getElementById('itemInput');
+
+    input.addEventListener('keydown', e => { if (e.key === 'Enter') addItem(); });
+
+    function save() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+    }
+
+    function render() {
+      listEl.innerHTML = '';
+      const remaining = items.filter(i => !i.checked).length;
+      countEl.textContent = items.length ? `${remaining} remaining / ${items.length} total` : '';
+      emptyEl.style.display = items.length ? 'none' : 'block';
+
+      items.forEach((item, idx) => {
+        const li = document.createElement('li');
+        if (item.checked) li.classList.add('checked');
+
+        const cb = document.createElement('input');
+        cb.type = 'checkbox';
+        cb.checked = item.checked;
+        cb.onchange = () => toggleItem(idx);
+
+        const span = document.createElement('span');
+        span.textContent = item.name;
+
+        const btn = document.createElement('button');
+        btn.textContent = '\u00d7';
+        btn.title = 'Delete';
+        btn.onclick = () => deleteItem(idx);
+
+        li.append(cb, span, btn);
+        listEl.appendChild(li);
+      });
+    }
+
+    function addItem() {
+      const name = input.value.trim();
+      if (!name) return;
+      items.push({ name, checked: false });
+      input.value = '';
+      input.focus();
+      save();
+      render();
+    }
+
+    function toggleItem(idx) {
+      items[idx].checked = !items[idx].checked;
+      save();
+      render();
+    }
+
+    function deleteItem(idx) {
+      items.splice(idx, 1);
+      save();
+      render();
+    }
+
+    render();
+    input.focus();
+  </script>
+</body>
+</html>
